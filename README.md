@@ -1,12 +1,12 @@
-<h1 align="center"><a href="https://organize.mlh.io/participants/events/4390-kickstarting-hacktoberfest-with-acm-vit">Kicking Off Hacktoberfest with ACM-VIT!</a></h1>
+<h1 align="center">Kicking Off Hacktoberfest with ACM-VIT!</h1>
 <p align="center">
-<img src="https://raw.githubusercontent.com/Malika01/hacktoberfest-readme/master/Final.png">
+<img src="./banner.png">
 </p>
 
-<h2 align="center"> PROJECT TITLE </h2>
+<h2 align="center"> Golly Bot! </h2>
 
 <p align="center"> 
-Short description about the project.
+A general purpose Discord bot, written in GO!
 </p>
 
 <p>
@@ -23,20 +23,19 @@ Short description about the project.
 
  * Fork the repository by clicking the fork button on top right corner of the page
  * Clone the target repository. To clone, click on the clone button and copy the https address. Then run 
- <pre><code>git clone [HTTPS-ADDRESS]</code></pre>
+ <pre><code>git clone https://github.com/ACM-VIT/golly-bot.git</code></pre>
 * Go to the cloned directory by running 
-<pre><code>cd [NAME-OF-REPO]</code></pre>
+<pre><code>cd golly-bot</code></pre>
 * Create a new branch. Use 
-<pre><code> git checkout -b [YOUR-BRANCH-NAME]</code></pre>
+<pre><code> git checkout -b mynewbranch</code></pre>
 * Make your changes to the code. Add changes to your branch by using 
 <pre><code>git add .</code></pre>
 * Commit the chanes by executing
-<pre><code>git commit -m "your msg"</code></pre>
+<pre><code>git commit -m "short message describing changes"</code></pre>
 * Push to remote. To do this, run 
-<pre><code>git push origin [YOUR-BRANCH-NAME]</code></pre>
-* Create a pull request. Go to the target repository and click on the "Compare & pull request" button. **Make sure your PR description mentions which issues you're solving.**
-<img src="https://drive.google.com/u/1/uc?id=1f9JKAR-kRvCRGxIs_SAvegaYDPx53T9G&export=download"></img>
-* Wait for your request to be accepted. 
+<pre><code>git push origin mynewbranch</code></pre>
+* Create a pull request. Go to the target repository and click on the "Compare & pull request" button. **Make sure your PR description mentions which issues you're solving.** Wait for your request to be accepted, and you're good to go!
+<p align="center"><img src="https://drive.google.com/u/1/uc?id=1f9JKAR-kRvCRGxIs_SAvegaYDPx53T9G&export=download"></img></p>
 
 ---
 ## Guidelines for Pull Request
@@ -48,9 +47,9 @@ Short description about the project.
   * Do not spam
   * Project maintainer's decision on validity of PR is final.
 
-  For additional guidelines, refer to [participation rules](https://hacktoberfest.digitalocean.com/details#rules)
+  For additional guidelines, refer to [this website](https://hacktoberfest.com/participation/) for additional information
 
----
+<!-- ---
 
 -_domain specific guidelines here_-
   
@@ -61,14 +60,14 @@ The overview starts here. Random text about the project, motive, how, what, why 
 
 ---
 ## Usage
-<!-- How To, Features, Installation etc. as subheadings in this section. example-->
+How To, Features, Installation etc. as subheadings in this section. example
 
 Lets get started!
 ```console
 git remote add
 git fetch
 git merge
-```
+``` -->
 
 ---
 ## Authors
