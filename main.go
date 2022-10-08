@@ -7,7 +7,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 )
-
+//the bots id 
+var botID string
 //constants are variables that never change
 const (
 token = "token here"
