@@ -2,6 +2,9 @@ package main
 
 import (
 	// Import the Discordgo package, and other required packages.
+        "strings"
+	"github.com/bwmarrin/discordgo"
+
 )
 
 //constants are variables that never change
