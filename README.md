@@ -49,11 +49,11 @@ A general purpose Discord bot, written in GO!
 
   For additional guidelines, refer to [this website](https://hacktoberfest.com/participation/) for additional information
 
-<!-- ---
-
--_domain specific guidelines here_-
-  
 ---
+
+Instructions on how to create a Discord Bot token can be found [here](https://www.writebots.com/discord-bot-token/)
+  
+<!-- ---
 ## Overview
 
 The overview starts here. Random text about the project, motive, how, what, why etc.
@@ -72,5 +72,7 @@ git merge
 ---
 ## Authors
 
-**Authors:** <!-- [author1's name](link to their github profile), [author2's name](link to their github profile) .. -->  
-**Contributors:** <!-- Generate contributors list using this link - https://contributors-img.web.app/preview -->
+  - [Anish Raghavendra](https://github.com/z404)
+  - [Manav Muthanna](https://github.com/ManavMuthanna)
+  - [Sarthak Gupta](https://github.com/gptsarthak)  
+<!-- **Contributors:** Generate contributors list using this link - https://contributors-img.web.app/preview -->
