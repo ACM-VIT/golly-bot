@@ -2,6 +2,7 @@ package main
 
 import (
 	// Import the Discordgo package, and other required packages.
+        "fmt"
         "strings"
 	"github.com/bwmarrin/discordgo"
 
