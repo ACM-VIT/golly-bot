@@ -4,28 +4,51 @@ import (
 	// Import the Discordgo package, and other required packages.
 )
 
-// Init function, called on startup, before the main function.
-func init() {
-	// Setup required variables and other objects here.
-}
-
+//constants are variables that never change
+const (
+token = "token here"
+botPrefix = "!"
+)
 // Main function of the bot, called on startup.
+
 func main() {
-	// Create a new Discord session using the provided bot token.
+	dg, err := discordgo.New("Bot " + token)
+	if err != nil {
+		panic(err)
+	}
+	u, err := dg.User("@me")
+	if err != nil {
+		panic(err)
+	}
+	botID = u.ID
 
-	// Register a function as callback for MessageCreate events.
+	dg.AddHandler(messageCreate)
 
-	// Open a websocket connection to Discord and begin listening.
+	dg.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuildPresences
 
-	// Wait until CTRL-C or other term signal is received.
+	if err = dg.Open(); err != nil {
+		panic(err)
+	}
 
-	// Close the websocket gracefully.
+	fmt.Println("Bot Online! CTRL C to turn it off")
+	select {}
 }
+// this handles all commands and makes it so when a player uses a command the bot actually runs it
+func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.ID == botID {
+		return
+	}
+	args := strings.Split(strings.TrimPrefix(m.Content, botPrefix), " ")
+	command := args[0]
+	if len(args) > 1 {
+		args = args[1:]
+	} else {
+		args = nil
+	}
 
-// MessageCreate is called whenever a new message is created on any channel that the authenticated bot has access to.
-// Set parameters accordingly.
-func messageCreate() {
-	// Ignore all messages created by the bot itself
+	switch strings.ToLower(command) {
+	
 
-	//Develop commands to the bot here.
+//Develop commands to the bot here.
+     }
 }
