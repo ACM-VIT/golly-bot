@@ -70,6 +70,10 @@ git merge
 ``` -->
 
 ---
+## License
+[License](LICENSE)
+
+---
 ## Authors
 
   - [Anish Raghavendra](https://github.com/z404)
