@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	owm "github.com/briandowns/openweathermap"
 )
 
 var (
@@ -163,6 +164,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 			}
+		case botPrefix + "weather":
+			var apiKey = "your apikey here"
+			w, err := owm.NewCurrent("F", "EN", apiKey) // Returns weather in fahrenheit and English
+			if err != nil {
+				log.Fatalln(err)
+			}
+			var location = strings.Title(strings.ToLower(strings.SplitN(m.Content, " ", 2)[1]))
+			w.CurrentByName(location)
+			var result = fmt.Sprintf("Feels Like: %.2f°F\nTemperature: %.2f°F\nMin Temperature: %.2f°F\nMax Temperature: %.2f°F\nHumidity: %d%%\nWind speed: %.2fm/s\n", w.Main.FeelsLike, w.Main.Temp, w.Main.TempMin, w.Main.TempMax, w.Main.Humidity, w.Wind.Speed)
+			for _, item := range w.Weather {
+				result += fmt.Sprintf("%s: %s\n", item.Main, item.Description)
+			}
+			s.ChannelMessageSend(m.ChannelID, result)
 		}
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
