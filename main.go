@@ -96,7 +96,7 @@ func randomGreeting(s *discordgo.Session, m *discordgo.MessageCreate) (greeting 
 }
 
 // Random coinflip command
-func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) {
+func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) (string) {
 	coin := []string{
                  "heads",
                  "tails",
@@ -107,5 +107,5 @@ func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) {
          // flip the coin
          side := coin[rand.Intn(len(coin))]
 
-         fmt.Println("Flipped the coin and you get : ", side)
+         return fmt.Sprintf("Flipped the coin and you get : %s", side)
 }
