@@ -25,8 +25,7 @@ var (
 )
 
 var (
-	token = "MTAyODI5OTU4ODc2MDc4NDkxNg.GSFhRJ.z-UNB6eexlMvMB0zFw_d1WY5eAkpJET9Aazr00"
-	// token     = "your token here"
+	token     = "your token here"
 	botPrefix = "!"
 	buffer    = make([][]byte, 0)
 
