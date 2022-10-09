@@ -3,8 +3,10 @@ package main
 import (
 	// Import the Discordgo package, and other required packages.
 
+	"encoding/binary"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -23,9 +25,12 @@ var (
 )
 
 var (
-	token     = "your token here"
+	token = "MTAyODI5OTU4ODc2MDc4NDkxNg.GSFhRJ.z-UNB6eexlMvMB0zFw_d1WY5eAkpJET9Aazr00"
+	// token     = "your token here"
 	botPrefix = "!"
-	commands  = []*discordgo.ApplicationCommand{
+	buffer    = make([][]byte, 0)
+
+	commands = []*discordgo.ApplicationCommand{
 		{
 			Name:        "time",
 			Description: "return current time.",
@@ -54,6 +59,14 @@ var greetings = []string{
 
 // Main function of the bot, called on startup.
 func main() {
+
+	// Load the sound file.
+	err := loadSound("airhorn.dca")
+	if err != nil {
+		fmt.Println("Error loading sound: ", err)
+		return
+	}
+
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -65,7 +78,7 @@ func main() {
 	dg.AddHandler(messageCreate)
 
 	// Setup intents
-	dg.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuildPresences
+	dg.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuildPresences | discordgo.IntentsGuildVoiceStates
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
@@ -125,6 +138,32 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
 		case "!coinflip":
 			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
+		case "!horn":
+			// Find the channel that the message came from.
+			c, err := s.State.Channel(m.ChannelID)
+			if err != nil {
+				// Could not find channel.
+				return
+			}
+
+			// Find the guild for that channel.
+			g, err := s.State.Guild(c.GuildID)
+			if err != nil {
+				// Could not find guild.
+				return
+			}
+
+			// Look for the message sender in that guild's current voice states.
+			for _, vs := range g.VoiceStates {
+				if vs.UserID == m.Author.ID {
+					err = playSound(s, g.ID, vs.ChannelID)
+					if err != nil {
+						fmt.Println("Error playing sound:", err)
+					}
+
+					return
+				}
+			}
 		}
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
@@ -148,16 +187,81 @@ func randomGreeting(s *discordgo.Session, m *discordgo.MessageCreate) (greeting 
 }
 
 // Random coinflip command
-func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) (string) {
+func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) string {
 	coin := []string{
-                 "heads",
-                 "tails",
-         }
+		"heads",
+		"tails",
+	}
 
-         rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 
-         // flip the coin
-         side := coin[rand.Intn(len(coin))]
+	// flip the coin
+	side := coin[rand.Intn(len(coin))]
 
-         return fmt.Sprintf("Flipped the coin and you get : %s", side)
+	return fmt.Sprintf("Flipped the coin and you get : %s", side)
+}
+
+// playSound plays the current buffer to the provided channel.
+func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
+
+	// Join the provided voice channel.
+	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
+	if err != nil {
+		return err
+	}
+	// Sleep for a specified amount of time before playing the sound
+	time.Sleep(250 * time.Millisecond)
+	// Start speaking.
+	vc.Speaking(true)
+	// Send the buffer data.
+	for _, buff := range buffer {
+		vc.OpusSend <- buff
+	}
+	// Stop speaking
+	vc.Speaking(false)
+	// Sleep for a specificed amount of time before ending.
+	time.Sleep(250 * time.Millisecond)
+	// Disconnect from the provided voice channel.
+	vc.Disconnect()
+	return nil
+}
+
+// loadSound attempts to load an encoded sound file from disk.
+func loadSound(filename string) error {
+
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Error opening dca file :", err)
+		return err
+	}
+	var opuslen int16
+	for {
+		// Read opus frame length from dca file.
+		err = binary.Read(file, binary.LittleEndian, &opuslen)
+		// If this is the end of the file, just return.
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			err := file.Close()
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		if err != nil {
+			fmt.Println("Error reading from dca file :", err)
+			return err
+		}
+
+		// Read encoded pcm from dca file.
+		InBuf := make([]byte, opuslen)
+		err = binary.Read(file, binary.LittleEndian, &InBuf)
+
+		// Should not be any end of file errors
+		if err != nil {
+			fmt.Println("Error reading from dca file :", err)
+			return err
+		}
+		// Append encoded pcm data to the buffer.
+		buffer = append(buffer, InBuf)
+	}
 }
