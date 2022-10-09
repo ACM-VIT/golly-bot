@@ -3,6 +3,7 @@ module golly-bot
 go 1.19
 
 require (
+	github.com/briandowns/openweathermap v0.19.0 // indirect
 	github.com/bwmarrin/discordgo v0.26.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
