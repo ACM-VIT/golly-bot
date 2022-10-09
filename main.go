@@ -27,6 +27,7 @@ var (
 
 var (
 	token     = "your token here"
+	aptly     = "openweather apiKey"
 	botPrefix = "!"
 	buffer    = make([][]byte, 0)
 
@@ -165,8 +166,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 			}
 		case botPrefix + "weather":
-			var apiKey = "your apikey here"
-			w, err := owm.NewCurrent("F", "EN", apiKey) // Returns weather in fahrenheit and English
+			w, err := owm.NewCurrent("F", "EN", aptly) // Returns weather in fahrenheit and English
 			if err != nil {
 				log.Fatalln(err)
 			}
