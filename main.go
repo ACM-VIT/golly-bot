@@ -71,6 +71,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// if the command is !greet
 		case "!greet":
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
+		case "!coinflip":
+			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
 		}
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
@@ -91,4 +93,19 @@ func randomGreeting(s *discordgo.Session, m *discordgo.MessageCreate) (greeting 
 	})
 
 	return fmt.Sprintf("%s, %s", greetings[0], m.Author.Mention())
+}
+
+// Random coinflip command
+func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) (string) {
+	coin := []string{
+                 "heads",
+                 "tails",
+         }
+
+         rand.Seed(time.Now().UnixNano())
+
+         // flip the coin
+         side := coin[rand.Intn(len(coin))]
+
+         return fmt.Sprintf("Flipped the coin and you get : %s", side)
 }
