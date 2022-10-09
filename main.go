@@ -71,7 +71,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// if the command is !greet
 		case "!greet":
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
-		case "!coinFlip":
+		case "!coinflip":
 			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
 		}
 		// if the message doesn't start with the prefix, then we check if it matches
