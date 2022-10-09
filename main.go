@@ -133,11 +133,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, botPrefix) {
 		switch strings.ToLower(strings.Split(m.Content, " ")[0]) {
 		// if the command is !greet
-		case "!greet":
+		case botPrefix + "greet":
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
-		case "!coinflip":
+		case botPrefix + "coinflip":
 			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
-		case "!horn":
+		case botPrefix + "horn":
 			// Find the channel that the message came from.
 			c, err := s.State.Channel(m.ChannelID)
 			if err != nil {
