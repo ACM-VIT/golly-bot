@@ -185,7 +185,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println(err)
 			} else {
 				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
-				go s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
+				s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
 			}
 		}
 		// if the message doesn't start with the prefix, then we check if it matches
