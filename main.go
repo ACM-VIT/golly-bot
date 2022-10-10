@@ -177,6 +177,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				result += fmt.Sprintf("%s: %s\n", item.Main, item.Description)
 			}
 			s.ChannelMessageSend(m.ChannelID, result)
+		//!remindme command
+		case botPrefix + "remindme":
+			var remindMessage = strings.SplitN(m.Content, " ", 3)[2]
+			timer, err := strconv.Atoi(strings.SplitN(m.Content, " ", 3)[1])
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
+				go s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
+			}
 		}
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
@@ -186,6 +196,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
 		}
 	}
+	
 }
 
 func randomGreeting(s *discordgo.Session, m *discordgo.MessageCreate) (greeting string) {
@@ -277,4 +288,9 @@ func loadSound(filename string) error {
 		// Append encoded pcm data to the buffer.
 		buffer = append(buffer, InBuf)
 	}
+}
+//!remindme command function
+func remindMe(s *discordgo.Session, m *discordgo.MessageCreate, remindMessage string, timer int) string {
+	<-time.After(time.Duration(timer) * time.Second)
+	return fmt.Sprintf("%s! %s", m.Author.Mention(), "Reminder: "+remindMessage)
 }
