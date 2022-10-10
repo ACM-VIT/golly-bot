@@ -16,8 +16,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	owm "github.com/briandowns/openweathermap"
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -134,6 +134,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// if the message starts with the prefix, then we know it's a command
 	if strings.HasPrefix(m.Content, botPrefix) {
 		switch strings.ToLower(strings.Split(m.Content, " ")[0]) {
+		case botPrefix + "ping":
+			s.ChannelMessageSend(m.ChannelID, "pong!")
 		// if the command is !greet
 		case botPrefix + "greet":
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
