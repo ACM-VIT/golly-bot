@@ -26,10 +26,11 @@ var (
 )
 
 var (
-	token     = "your token here"
-	aptly     = "openweather apiKey"
-	botPrefix = "!"
-	buffer    = make([][]byte, 0)
+	token        = "your token here"
+	aptly        = "openweather apiKey"
+	logChannelID = "your logging channel id here"
+	botPrefix    = "!"
+	buffer       = make([][]byte, 0)
 
 	commands = []*discordgo.ApplicationCommand{
 		{
@@ -195,16 +196,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		// Log commands in the channel
-		guild, err := s.Guild(m.GuildID)
-		if err != nil {
-			fmt.Printf("Error getting guild info: %s", err)
-			return
-		}
+		if logChannelID != "" {
+			guild, err := s.Guild(m.GuildID)
+			if err != nil {
+				fmt.Printf("Error getting guild info: %s", err)
+				return
+			}
 
-		s.ChannelMessageSend(
-			m.ChannelID,
-			fmt.Sprintf(`%s > %s > %s`, guild.Name, m.Author.Username, m.Content),
-		)
+			s.ChannelMessageSend(
+				logChannelID,
+				fmt.Sprintf(`%s > %s > %s`, guild.Name, m.Author.Username, m.Content),
+			)
+		}
 
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
