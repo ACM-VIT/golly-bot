@@ -26,10 +26,11 @@ var (
 )
 
 var (
-	token     = "your token here"
-	aptly     = "openweather apiKey"
-	botPrefix = "!"
-	buffer    = make([][]byte, 0)
+	token        = "your token here"
+	aptly        = "openweather apiKey"
+	logChannelID = "your logging channel id here"
+	botPrefix    = "!"
+	buffer       = make([][]byte, 0)
 
 	commands = []*discordgo.ApplicationCommand{
 		{
@@ -189,7 +190,25 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
 				s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
 			}
+		default:
+			fmt.Println("Command not implemented")
+			return
 		}
+
+		// Log commands in the channel
+		if logChannelID != "" {
+			guild, err := s.Guild(m.GuildID)
+			if err != nil {
+				fmt.Printf("Error getting guild info: %s", err)
+				return
+			}
+
+			s.ChannelMessageSend(
+				logChannelID,
+				fmt.Sprintf(`%s > %s > %s`, guild.Name, m.Author.Username, m.Content),
+			)
+		}
+
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
 	} else {
@@ -290,6 +309,7 @@ func loadSound(filename string) error {
 		buffer = append(buffer, InBuf)
 	}
 }
+
 //!remindme command function
 func remindMe(s *discordgo.Session, m *discordgo.MessageCreate, remindMessage string, timer int) string {
 	<-time.After(time.Duration(timer) * time.Second)
