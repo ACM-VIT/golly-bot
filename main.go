@@ -196,7 +196,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
 		}
 	}
-	
 }
 
 func randomGreeting(s *discordgo.Session, m *discordgo.MessageCreate) (greeting string) {
