@@ -19,6 +19,7 @@ import (
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
 	emj "github.com/kenshaw/emoji"
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -28,12 +29,11 @@ var (
 )
 
 var (
-	// Secrets from .env file
-	token        = getEnv("TOKEN")
-	aptly        = getEnv("API_KEY")
-	logChannelID = getEnv("LOG_CHANNEL_ID")
-	botPrefix    = getEnv("BOT_PREFIX")
-
+	//declaring secrets
+	token        = ""
+	aptly        = ""
+	logChannelID = ""
+	botPrefix    = ""
 	buffer       = make([][]byte, 0)
 
 	commands = []*discordgo.ApplicationCommand{
@@ -67,20 +67,20 @@ func init() { flag.Parse() }
 
 // Main function of the bot, called on startup.
 func main() {
-	// Load environment variables
-	getEnv := func(key string) {
-        val, ok := os.LookupEnv(key)
-        if !ok {
-            fmt.Printf("%s is not present, please check your .env file.\n", key)
-			// stop further execution of the program 
-			os.Exit() 
-        } else {
-            return val
-        }
-    }
+	//load env variables
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+		return
+	}
+	//apply env variables to secrets
+	token = os.Getenv("TOKEN")
+	aptly = os.Getenv("API_KEY")
+	logChannelID = os.Getenv("LOG_CHANNEL_ID")
+	botPrefix = os.Getenv("BOT_PREFIX")
 
 	// Load the sound file.
-	err := loadSound("airhorn.dca")
+	err = loadSound("airhorn.dca")
 	if err != nil {
 		fmt.Println("Error loading sound: ", err)
 		return
@@ -215,6 +215,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				result += fmt.Sprintf("%s: %s\n", item.Main, item.Description)
 			}
 			s.ChannelMessageSend(m.ChannelID, result)
+		case botPrefix + "serverinfo":
+			// sends embed containing server info
+			s.ChannelMessageSendEmbed(m.ChannelID, serverinfo(s, m))
+
 		//!remindme command
 		case botPrefix + "remindme":
 			var remindMessage = strings.SplitN(m.Content, " ", 3)[2]
@@ -376,7 +380,7 @@ func loadSound(filename string) error {
 	}
 }
 
-//!remindme command function
+// !remindme command function
 func remindMe(s *discordgo.Session, m *discordgo.MessageCreate, remindMessage string, timer int) string {
 	<-time.After(time.Duration(timer) * time.Second)
 	return fmt.Sprintf("%s! %s", m.Author.Mention(), "Reminder: "+remindMessage)
@@ -464,5 +468,68 @@ func raffle(s *discordgo.Session, channelID, messageID, emoji string) string {
 	rand.Seed(time.Now().UnixNano())
 	winner := reactedUsers[rand.Intn(len(reactedUsers))]
 
-	return fmt.Sprintf("The winner is : %s", winner)
+	return fmt.Sprintf("The winner is: <@%s>", winner.ID)
+}
+
+func serverinfo(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo.MessageEmbed {
+
+	c, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		log.Println("couldnt get the channel id")
+	}
+
+	// Find the guild for that channel.
+	g, err := s.State.Guild(c.GuildID)
+	if err != nil {
+		log.Println("couldnt get the channel id")
+	}
+
+	owner := "<@" + g.OwnerID + ">"
+	category_channel_count := 0
+	text_channel_count := 0
+	voice_channel_count := 0
+	// finding the count of all channels
+	for _, ch := range g.Channels {
+		switch ch.Type {
+		case discordgo.ChannelTypeGuildCategory:
+			category_channel_count++
+		case discordgo.ChannelTypeGuildText:
+			text_channel_count++
+		case discordgo.ChannelTypeGuildVoice:
+			voice_channel_count++
+		}
+	}
+	member_count := g.MemberCount
+	role_count := len(g.Roles)
+	embed := &discordgo.MessageEmbed{
+		Title: "Server Info",
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "Server Owner",
+				Value: owner,
+			},
+			{
+				Name:  "Category Channels",
+				Value: strconv.Itoa(category_channel_count),
+			},
+			{
+				Name:  "Text Channels",
+				Value: strconv.Itoa(text_channel_count),
+			},
+			{
+				Name:  "Voice Channels",
+				Value: strconv.Itoa(voice_channel_count),
+			},
+			{
+				Name:  "Members",
+				Value: strconv.Itoa(member_count),
+			},
+			{
+				Name:  "Roles",
+				Value: strconv.Itoa(role_count),
+			},
+		},
+	}
+
+	return embed
 }
