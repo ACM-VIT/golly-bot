@@ -79,7 +79,7 @@ func main() {
 	botPrefix = os.Getenv("BOTPREFIX")
 
 	// Load the sound file.
-	err := loadSound("airhorn.dca")
+	err = loadSound("airhorn.dca")
 	if err != nil {
 		fmt.Println("Error loading sound: ", err)
 		return
