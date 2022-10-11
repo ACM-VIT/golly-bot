@@ -76,7 +76,7 @@ func main() {
 	token = os.Getenv("TOKEN")
 	aptly = os.Getenv("API_KEY")
 	logChannelID = os.Getenv("LOG_CHANNEL_ID")
-	botPrefix = os.Getenv("BOTPREFIX")
+	botPrefix = os.Getenv("BOT_PREFIX")
 
 	// Load the sound file.
 	err = loadSound("airhorn.dca")
