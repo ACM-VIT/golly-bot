@@ -185,7 +185,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			var remindMessage = strings.SplitN(m.Content, " ", 3)[2]
 			timer, err := strconv.Atoi(strings.SplitN(m.Content, " ", 3)[1])
 			if err != nil {
-				fmt.Println(err)
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error! %s\nPlease use the correct syntax: !remindme <seconds> <message>", err))
 			} else {
 				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
 				s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
