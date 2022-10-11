@@ -23,6 +23,7 @@ import (
 var (
 	GuildID        = flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+	EnableAutoMod  = flag.Bool("enable-automod", false, "Enable the auto-moderation")
 )
 
 var (
@@ -59,6 +60,8 @@ var greetings = []string{
 	"It's a pleasure to meet you",
 }
 
+func init() { flag.Parse() }
+
 // Main function of the bot, called on startup.
 func main() {
 
@@ -80,7 +83,15 @@ func main() {
 	dg.AddHandler(messageCreate)
 
 	// Setup intents
-	dg.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuildPresences | discordgo.IntentsGuildVoiceStates
+	dg.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuildPresences | discordgo.IntentsGuildVoiceStates | discordgo.IntentAutoModerationExecution | discordgo.IntentMessageContent
+
+	if *EnableAutoMod {
+		rule := initAutoModeration(dg)
+		defer func() {
+			fmt.Println("Removing AutoModerationRule")
+			dg.AutoModerationRuleDelete(*GuildID, rule.ID)
+		}()
+	}
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
@@ -314,4 +325,45 @@ func loadSound(filename string) error {
 func remindMe(s *discordgo.Session, m *discordgo.MessageCreate, remindMessage string, timer int) string {
 	<-time.After(time.Duration(timer) * time.Second)
 	return fmt.Sprintf("%s! %s", m.Author.Mention(), "Reminder: "+remindMessage)
+}
+
+func initAutoModeration(session *discordgo.Session) *discordgo.AutoModerationRule {
+	enabled := true
+	rule, err := session.AutoModerationRuleCreate(*GuildID, &discordgo.AutoModerationRule{
+		Name:        "GollyBot Auto Moderation",
+		EventType:   discordgo.AutoModerationEventMessageSend,
+		TriggerType: discordgo.AutoModerationEventTriggerKeyword,
+		TriggerMetadata: &discordgo.AutoModerationTriggerMetadata{
+			KeywordFilter: []string{"*Voldemort*"},
+		},
+		Actions: []discordgo.AutoModerationAction{
+			{Type: discordgo.AutoModerationRuleActionBlockMessage},
+		},
+
+		Enabled: &enabled,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Successfully created the rule")
+
+	session.AddHandlerOnce(func(s *discordgo.Session, e *discordgo.AutoModerationActionExecution) {
+		_, err = session.AutoModerationRuleEdit(*GuildID, rule.ID, &discordgo.AutoModerationRule{
+			Actions: []discordgo.AutoModerationAction{
+				{Type: discordgo.AutoModerationRuleActionBlockMessage},
+				{Type: discordgo.AutoModerationRuleActionSendAlertMessage, Metadata: &discordgo.AutoModerationActionMetadata{
+					ChannelID: e.ChannelID,
+				}},
+			},
+		})
+
+		if err != nil {
+			session.AutoModerationRuleDelete(*GuildID, rule.ID)
+			panic(err)
+		}
+
+		s.ChannelMessageSend(e.ChannelID, "Shh we aren't supposed to speak that name!")
+	})
+	return rule
 }
