@@ -2,6 +2,14 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,go,goland
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,go,goland
 
+# Secrets 
+.env 
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.env 
+
 ### Go ###
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
