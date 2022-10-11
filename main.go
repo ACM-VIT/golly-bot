@@ -18,6 +18,7 @@ import (
 
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
+	emj "github.com/kenshaw/emoji"
 	"github.com/joho/godotenv"
 )
 
@@ -92,6 +93,9 @@ func main() {
 		return
 	}
 
+	// Enable message tracking to the session.
+	trackSessionMessages(dg)
+
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(messageCreate)
 
@@ -148,6 +152,11 @@ func main() {
 	}
 
 	dg.Close()
+}
+
+// Sets the maximum number of messages to track for a session
+func trackSessionMessages(dg *discordgo.Session) {
+	dg.State.MaxMessageCount = 10000
 }
 
 // This handles all commands sent to the bot
@@ -220,6 +229,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
 				s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
 			}
+		case botPrefix + "raffle":
+			var msgContent = strings.Split(m.Content, " ")
+
+			// Check if message ID and emoji are present
+			if len(strings.Split(m.Content, " ")) < 3 {
+				fmt.Println("Error finding message id or emoji")
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprint("Something went wrong, try again!\nPlease use the syntax is !raffle <message id> <reaction>\n"))
+			}
+			var messageID = msgContent[1]
+			var emoji = msgContent[2]
+
+			s.ChannelMessageSend(m.ChannelID, raffle(s, m.ChannelID, messageID, emoji))
 		default:
 			fmt.Println("Command not implemented")
 			return
@@ -257,6 +278,7 @@ func formatHelpMessage() string {
 		"horn":                         "Honk the summoner",
 		"weather <location>":           "How is the weather in <location> ? ",
 		"remindme <seconds> <message>": "Create a reminder",
+		"raffle <message id> <emoji>":  "Reply with a random user who reacted to given message with given emoji",
 	}
 
 	helpMessage := "Available commands:\n"
@@ -403,6 +425,50 @@ func initAutoModeration(session *discordgo.Session) *discordgo.AutoModerationRul
 		s.ChannelMessageSend(e.ChannelID, "Shh we aren't supposed to speak that name!")
 	})
 	return rule
+}
+
+// raffle attempts to create list of users in the channel who reacted to given message
+// with given emoji (or) reaction and returns a random user.
+func raffle(s *discordgo.Session, channelID, messageID, emoji string) string {
+	var reaction discordgo.Emoji
+
+	// Find emoji id and name
+	desc := emj.FromCode(emoji).Description
+	emojis := emj.Gemoji()
+	for _, em := range emojis {
+		if em.Description == desc {
+			reaction = discordgo.Emoji{
+				ID:   em.Emoji,
+				Name: em.Description,
+			}
+		}
+	}
+
+	// Find message with given id in the channel
+	message, err := s.State.Message(channelID, messageID)
+	if err != nil {
+		//Could not find the message
+		fmt.Println("Error finding message with ID :", messageID)
+		return fmt.Sprint("Could not find message with ID : ", messageID)
+	}
+
+	// Find users who reacted to the message with given emoji
+	reactedUsers, err := s.MessageReactions(channelID, messageID, reaction.ID, 100, "", "")
+	if err != nil {
+		fmt.Println(err)
+		return fmt.Sprint("Could not find users reacted to this message")
+	}
+
+	// Returns, if no user reacted to the message
+	if len(reactedUsers) == 0 {
+		return fmt.Sprint("No user reacted to the message ", message.Content, "with emojiID ", reaction.ID)
+	}
+
+	// Pick random user from the list of users who reacted to the message
+	rand.Seed(time.Now().UnixNano())
+	winner := reactedUsers[rand.Intn(len(reactedUsers))]
+
+	return fmt.Sprintf("The winner is: <@%s>", winner.ID)
 }
 
 func serverinfo(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo.MessageEmbed {
