@@ -146,6 +146,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// if the message starts with the prefix, then we know it's a command
 	if strings.HasPrefix(m.Content, botPrefix) {
 		switch strings.ToLower(strings.Split(m.Content, " ")[0]) {
+		case botPrefix + "gollyhelp":
+			s.ChannelMessageSend(m.ChannelID, formatHelpMessage())
 		case botPrefix + "ping":
 			s.ChannelMessageSend(m.ChannelID, "pong!")
 		// if the command is !greet
@@ -228,6 +230,24 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
 		}
 	}
+}
+
+func formatHelpMessage() string {
+	commands := map[string]string{
+		"ping":                         "Reply with pong",
+		"greet":                        "Reply with a greeting message",
+		"coinflip":                     "Flip the coin!",
+		"horn":                         "Honk the summoner",
+		"weather <location>":           "How is the weather in <location> ? ",
+		"remindme <seconds> <message>": "Create a reminder",
+	}
+
+	helpMessage := "Available commands:\n"
+	for cmd, desc := range commands {
+		helpMessage += fmt.Sprintf("- `!%s`: %s\n", cmd, desc)
+	}
+
+	return helpMessage
 }
 
 func randomGreeting(s *discordgo.Session, m *discordgo.MessageCreate) (greeting string) {
