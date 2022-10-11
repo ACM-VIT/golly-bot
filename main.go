@@ -18,6 +18,7 @@ import (
 
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -27,12 +28,11 @@ var (
 )
 
 var (
-	// Secrets from .env file
-	token        = getEnv("TOKEN")
-	aptly        = getEnv("API_KEY")
-	logChannelID = getEnv("LOG_CHANNEL_ID")
-	botPrefix    = getEnv("BOT_PREFIX")
-
+	//declaring secrets
+	token        = ""
+	aptly        = ""
+	logChannelID = ""
+	botPrefix    = ""
 	buffer       = make([][]byte, 0)
 
 	commands = []*discordgo.ApplicationCommand{
@@ -66,17 +66,17 @@ func init() { flag.Parse() }
 
 // Main function of the bot, called on startup.
 func main() {
-	// Load environment variables
-	getEnv := func(key string) {
-        val, ok := os.LookupEnv(key)
-        if !ok {
-            fmt.Printf("%s is not present, please check your .env file.\n", key)
-			// stop further execution of the program 
-			os.Exit() 
-        } else {
-            return val
-        }
-    }
+	//load env variables
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+		return
+	}
+	//apply env variables to secrets
+	token = os.Getenv("TOKEN")
+	aptly = os.Getenv("API_KEY")
+	logChannelID = os.Getenv("LOG_CHANNEL_ID")
+	botPrefix = os.Getenv("BOTPREFIX")
 
 	// Load the sound file.
 	err := loadSound("airhorn.dca")
