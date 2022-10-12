@@ -9,7 +9,7 @@
 A general purpose Discord bot, written in GO!
 </p>
 
-<p>
+<p align="center">
   <a href="https://acmvit.in/" target="_blank">
     <img alt="made-by-acm" src="https://img.shields.io/badge/MADE%20BY-ACM%20VIT-blue?style=for-the-badge" />
   </a>
@@ -51,7 +51,23 @@ A general purpose Discord bot, written in GO!
 
 ---
 
-Instructions on how to create a Discord Bot token can be found [here](https://www.writebots.com/discord-bot-token/)
+## Instructions on how to run the bot locally
+ 
+  * In the cloned directory :
+     * Add a .env file following the .env.sample file provided and add the required secrets like token,etc. <br>(Instructions on how to create a Discord Bot token can be found [here](https://www.writebots.com/discord-bot-token/))
+     * Make sure you have go and all its dependencies installed in your system. 
+       <br>(Instructions can be found [here](https://go.dev/doc/install))
+     * Run the following command
+       <pre><code>go run main.go</code></pre>
+## Instructions on how to run the bot in a docker container
+
+  * Build the docker image from the Dockerfile using the following command, **make sure you are inside the project folder.**
+    <pre><code>docker build -t &lt;your image name&gt; .</pre></code>
+  * Now run the application inside the container using the following command
+    <pre><code>docker run -it &lt;your image name&gt;</pre></code>
+  * To specify command line arguments, use
+    <pre><code>docker run -it &lt;your image name&gt; &lt;arguments&gt;</pre></code> 
+    For example:<pre><code>docker run -it &lt;your image name&gt; -rmcmd=false</pre></code>
   
 <!-- ---
 ## Overview
