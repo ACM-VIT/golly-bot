@@ -63,6 +63,10 @@ var greetings = []string{
 	"It's a pleasure to meet you",
 }
 
+var rpschoices = []string{
+	"rock", "paper", "scissors",
+}
+
 func init() { flag.Parse() }
 
 // Main function of the bot, called on startup.
@@ -241,6 +245,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			var emoji = msgContent[2]
 
 			s.ChannelMessageSend(m.ChannelID, raffle(s, m.ChannelID, messageID, emoji))
+		case botPrefix + "playrps":
+			var rpsChoice = strings.ToLower(strings.Split(m.Content, " ")[1])
+			if rps(s, m, rpsChoice) == "" {
+				s.ChannelMessageSend(m.ChannelID, "Invalid choice! Use syntax `!playrps <choice>`.\nYour choices are: rock, paper and scissors")
+			} else {
+				s.ChannelMessageSend(m.ChannelID, rps(s, m, rpsChoice))
+			}
 		default:
 			fmt.Println("Command not implemented")
 			return
@@ -279,11 +290,12 @@ func formatHelpMessage() string {
 		"weather <location>":           "How is the weather in <location> ? ",
 		"remindme <seconds> <message>": "Create a reminder",
 		"raffle <message id> <emoji>":  "Reply with a random user who reacted to given message with given emoji",
+		"playrps <choice>":		"Play rock, paper and scissors",
 	}
 
 	helpMessage := "Available commands:\n"
 	for cmd, desc := range commands {
-		helpMessage += fmt.Sprintf("- `!%s`: %s\n", cmd, desc)
+		helpMessage += fmt.Sprintf("- `%s%s`: %s\n", botPrefix, cmd, desc)
 	}
 
 	return helpMessage
@@ -533,3 +545,53 @@ func serverinfo(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo.Mes
 
 	return embed
 }
+// !playrps command function
+func rps(s *discordgo.Session, m *discordgo.MessageCreate, rpsChoice string) string {
+	//pick a random rps choice
+	randomIndex := rand.Intn(len(rpschoices))
+	botChoice := rpschoices[randomIndex]
+	//compare user choice with bot choice
+	switch rpsChoice {
+	case "rock":
+		if botChoice == "rock" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\n`It's a tie!`", rpsChoice, botChoice)
+		}
+
+		if botChoice == "paper" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\nPaper covers rock. `I win!`", rpsChoice, botChoice)
+		}
+
+		if botChoice == "scissors" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\nRock crushes scissors. `You win!`", rpsChoice, botChoice)
+		}
+
+	case "paper":
+		if botChoice == "rock" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\nPaper covers rock. `You win!`", rpsChoice, botChoice)
+		}
+
+		if botChoice == "paper" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\n`It's a tie!`", rpsChoice, botChoice)
+
+		}
+
+		if botChoice == "scissors" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\nScissors cut paper. `I win!`", rpsChoice, botChoice)
+		}
+
+	case "scissors":
+		if botChoice == "rock" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\nRock crushes scissors. `I win!`", rpsChoice, botChoice)
+		}
+
+		if botChoice == "paper" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\nScissors cut paper. `You win!`", rpsChoice, botChoice)
+		}
+
+		if botChoice == "scissors" {
+			return fmt.Sprintf("Your choice: %s\nMy choice: %s\n`It's a tie!`", rpsChoice, botChoice)
+		}
+	}
+	return ""
+}
+
