@@ -18,8 +18,8 @@ import (
 
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
-	emj "github.com/kenshaw/emoji"
 	"github.com/joho/godotenv"
+	emj "github.com/kenshaw/emoji"
 )
 
 var (
@@ -126,6 +126,9 @@ func main() {
 			h(s, i)
 		}
 	})
+
+	// Register the guildMemberJoin func as a callback for GuildMemberAdd events.
+	dg.AddHandler(guildMemberJoin)
 
 	fmt.Println("Adding commands...")
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
@@ -239,7 +242,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			// Check if message ID and emoji are present
 			if len(strings.Split(m.Content, " ")) < 3 {
 				fmt.Println("Error finding message id or emoji")
-				s.ChannelMessageSend(m.ChannelID, fmt.Sprint("Something went wrong, try again!\nPlease use the syntax is !raffle <message id> <reaction>\n"))
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprint("Something went wrong, try again!\nPlease use the correct syntax : !raffle <message id> <reaction>\n"))
 			}
 			var messageID = msgContent[1]
 			var emoji = msgContent[2]
@@ -290,7 +293,7 @@ func formatHelpMessage() string {
 		"weather <location>":           "How is the weather in <location> ? ",
 		"remindme <seconds> <message>": "Create a reminder",
 		"raffle <message id> <emoji>":  "Reply with a random user who reacted to given message with given emoji",
-		"playrps <choice>":		"Play rock, paper and scissors",
+		"playrps <choice>":             "Play rock, paper and scissors",
 	}
 
 	helpMessage := "Available commands:\n"
@@ -545,6 +548,7 @@ func serverinfo(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo.Mes
 
 	return embed
 }
+
 // !playrps command function
 func rps(s *discordgo.Session, m *discordgo.MessageCreate, rpsChoice string) string {
 	//pick a random rps choice
@@ -595,3 +599,29 @@ func rps(s *discordgo.Session, m *discordgo.MessageCreate, rpsChoice string) str
 	return ""
 }
 
+// guildMemberJoin sends welcome message when a new member joins the server.
+func guildMemberJoin(s *discordgo.Session, memberAdd *discordgo.GuildMemberAdd) {
+	message := &discordgo.MessageSend{
+		Content: fmt.Sprintf("Welcome to the channel %s", memberAdd.Mention()),
+		Embeds: []*discordgo.MessageEmbed{{
+			Image: &discordgo.MessageEmbedImage{
+				URL:    "https://thumbs.dreamstime.com/b/welcome-banner-shiny-colorful-confetti-vector-paper-illustration-welcome-banner-colorful-confetti-100006906.jpg",
+				Width:  10,
+				Height: 10,
+			},
+		}},
+	}
+
+	//Find all channels in the guild.
+	channels, _ := s.GuildChannels(memberAdd.GuildID)
+	for _, c := range channels {
+		// Send welcome message to general channel
+		// Send message to a text channel, if there is no general channel in the guild
+		if c.Name == "general" || c.Type == discordgo.ChannelTypeGuildText {
+			s.ChannelMessageSendComplex(c.ID, message)
+			return
+		}
+	}
+	fmt.Sprint("There is no text channel to send the welcome message.")
+	return
+}
