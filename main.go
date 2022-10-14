@@ -215,7 +215,7 @@ func sanitizeUser(user string) string {
 		return user
 	}
 	if strings.Contains(user, "<") {
-		user = strings.TrimPrefix(user, "@")
+		user = strings.ReplaceAll(user, "@", "")
 		user = strings.ReplaceAll(user, "<", "")
 		user = strings.ReplaceAll(user, ">", "")
 		return user
