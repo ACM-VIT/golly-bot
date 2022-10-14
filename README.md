@@ -55,6 +55,7 @@ A general purpose Discord bot, written in GO!
  
   * In the cloned directory :
      * Add a .env file following the .env.sample file provided and add the required secrets like token,etc. <br>(Instructions on how to create a Discord Bot token can be found [here](https://www.writebots.com/discord-bot-token/))
+     * Allow the bot to have Privilaged Intents as found [here](https://support.discord.com/hc/en-us/articles/360040720412-Bot-Verification-and-Data-Whitelisting)
      * Make sure you have go and all its dependencies installed in your system. 
        <br>(Instructions can be found [here](https://go.dev/doc/install))
      * Run the following command
