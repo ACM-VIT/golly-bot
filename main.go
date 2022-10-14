@@ -193,6 +193,19 @@ func trackSessionMessages(dg *discordgo.Session) {
 	dg.State.MaxMessageCount = 10000
 }
 
+var userToNic = map[string]string{}
+
+func nickChange(content string) string {
+	nickArgs := strings.SplitN(content, " ", 4)
+	user := nickArgs[1]
+	nick := nickArgs[2]
+	if _, ok := userToNic[user]; !ok {
+		userToNic[user] = nick
+		return fmt.Sprintf("user %v has been set to nick %v", user, nick)
+	}
+	return fmt.Sprintf("your nick is %v", userToNic[user])
+}
+
 // This handles all commands sent to the bot
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
@@ -234,6 +247,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 			}
+		case botPrefix + "nickchange":
+			st, err := s.UserChannelCreate(m.Author.ID)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("could not create a private channel for %v", m.Author))
+			}
+			s.ChannelMessageSend(st.ID, nickChange(m.Content))
+			return
 		case botPrefix + "ping":
 			s.ChannelMessageSend(m.ChannelID, "pong!")
 		case botPrefix + "playrps":
