@@ -19,6 +19,7 @@ import (
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/Krognol/go-wolfram"
 	emj "github.com/kenshaw/emoji"
 )
 
@@ -34,6 +35,7 @@ var (
 	aptly        = ""
 	logChannelID = ""
 	botPrefix    = ""
+	computeAppID = ""
 	buffer       = make([][]byte, 0)
 
 	commands = []*discordgo.ApplicationCommand{
@@ -83,6 +85,7 @@ func main() {
 	aptly = os.Getenv("API_KEY")
 	logChannelID = os.Getenv("LOG_CHANNEL_ID")
 	botPrefix = os.Getenv("BOT_PREFIX")
+	computeAppID = os.Getenv("WOLFRAM_API_KEY")
 
 	// Load the sound file.
 	err = loadSound("airhorn.dca")
@@ -319,6 +322,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			s.ChannelMessageSend(st.ID, fmt.Sprintf("the nick of %v has been changed", user))
 			return
+		case botPrefix + "compute":
+			var mathProb = strings.SplitN(m.Content, " ", 2)[1]
+			//Initialize a new client
+			c := &wolfram.Client{AppID: computeAppID}
+			//Get result by making a query using the WolframAlpha API 
+			res, err := c.GetShortAnswerQuery(mathProb, wolfram.Metric, 1000)
+			
+			if err != nil {
+				panic(err)
+			}
+			s.ChannelMessageSend(m.ChannelID, res)
 		default:
 			fmt.Println("Command not implemented")
 			return
@@ -345,6 +359,7 @@ func formatHelpMessage() string {
 		"remindme <seconds> <message>": "Create a reminder",
 		"raffle <message id> <emoji>":  "Reply with a random user who reacted to given message with given emoji",
 		"playrps <choice>":             "Play rock, paper and scissors",
+		"compute <query>":		"Ask general questions or mathematical/computational questions to WolframAlpha compute engine",
 	}
 
 	helpMessage := "Available commands:\n"
