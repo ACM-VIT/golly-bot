@@ -193,19 +193,6 @@ func trackSessionMessages(dg *discordgo.Session) {
 	dg.State.MaxMessageCount = 10000
 }
 
-var userToNic = map[string]string{}
-
-func nickChange(content string) string {
-	nickArgs := strings.SplitN(content, " ", 4)
-	user := nickArgs[1]
-	nick := nickArgs[2]
-	if _, ok := userToNic[user]; !ok {
-		userToNic[user] = nick
-		return fmt.Sprintf("user %v has been set to nick %v", user, nick)
-	}
-	return fmt.Sprintf("your nick is %v", userToNic[user])
-}
-
 func getGuild(s *discordgo.Session, channelID string) (*discordgo.Guild, error) {
 
 	// Find the channel that the message came from.
