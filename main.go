@@ -52,6 +52,7 @@ var (
 					Content: "<t:" + strconv.FormatInt(time.Now().Unix(), 10) + ">",
 				},
 			})
+			logCommand(s, i.GuildID, i.Member.User.Username, "time")
 		},
 	}
 )
@@ -161,6 +162,29 @@ func main() {
 	dg.Close()
 }
 
+func logCommand(s *discordgo.Session, gID, user, command string) {
+	// Add slash prefix to the log if given command is a slash command
+	// Else add prefix as BotPrefix
+	var prefix = "Slash"
+	if strings.Contains(command, botPrefix) {
+		prefix = "BotPrefix"
+	}
+
+	// Log commands in the channel
+	if logChannelID != "" {
+		guild, err := s.Guild(gID)
+		if err != nil {
+			fmt.Printf("Error getting guild info: %s", err)
+			return
+		}
+
+		s.ChannelMessageSend(
+			logChannelID,
+			fmt.Sprintf(`[%s] %s > %s > %s`, prefix, guild.Name, user, command),
+		)
+	}
+}
+
 // Sets the maximum number of messages to track for a session
 func trackSessionMessages(dg *discordgo.Session) {
 	dg.State.MaxMessageCount = 10000
@@ -259,20 +283,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println("Command not implemented")
 			return
 		}
-
-		// Log commands in the channel
-		if logChannelID != "" {
-			guild, err := s.Guild(m.GuildID)
-			if err != nil {
-				fmt.Printf("Error getting guild info: %s", err)
-				return
-			}
-
-			s.ChannelMessageSend(
-				logChannelID,
-				fmt.Sprintf(`%s > %s > %s`, guild.Name, m.Author.Username, m.Content),
-			)
-		}
+		logCommand(s, m.GuildID, m.Author.Username, m.Content)
 
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
