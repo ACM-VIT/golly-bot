@@ -193,6 +193,36 @@ func trackSessionMessages(dg *discordgo.Session) {
 	dg.State.MaxMessageCount = 10000
 }
 
+func getGuild(s *discordgo.Session, channelID string) (*discordgo.Guild, error) {
+
+	// Find the channel that the message came from.
+	c, err := s.State.Channel(channelID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not find channel")
+	}
+
+	// Find the guild for that channel.
+	g, err := s.State.Guild(c.GuildID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not find guild")
+	}
+	return g, nil
+}
+
+func sanitizeUser(user string) string {
+	// doing this just in case because it works
+	if user == "@me" {
+		return user
+	}
+	if strings.Contains(user, "<") {
+		user = strings.ReplaceAll(user, "@", "")
+		user = strings.ReplaceAll(user, "<", "")
+		user = strings.ReplaceAll(user, ">", "")
+		return user
+	}
+	return ""
+}
+
 // This handles all commands sent to the bot
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
@@ -206,26 +236,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, formatHelpMessage())
 		case botPrefix + "ping":
 			s.ChannelMessageSend(m.ChannelID, "pong!")
-		// if the command is !greet
-		case botPrefix + "greet":
+		case botPrefix + "greet": // if the command is !greet
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
 		case botPrefix + "coinflip":
 			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
 		case botPrefix + "horn":
-			// Find the channel that the message came from.
-			c, err := s.State.Channel(m.ChannelID)
+			g, err := getGuild(s, m.ChannelID)
 			if err != nil {
-				// Could not find channel.
-				return
-			}
+				fmt.Println("Error getting guild:", err)
 
-			// Find the guild for that channel.
-			g, err := s.State.Guild(c.GuildID)
-			if err != nil {
-				// Could not find guild.
-				return
 			}
-
 			// Look for the message sender in that guild's current voice states.
 			for _, vs := range g.VoiceStates {
 				if vs.UserID == m.Author.ID {
@@ -249,12 +269,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				result += fmt.Sprintf("%s: %s\n", item.Main, item.Description)
 			}
 			s.ChannelMessageSend(m.ChannelID, result)
+
 		case botPrefix + "serverinfo":
 			// sends embed containing server info
 			s.ChannelMessageSendEmbed(m.ChannelID, serverinfo(s, m))
-
-		//!remindme command
-		case botPrefix + "remindme":
+		case botPrefix + "remindme": //!remindme command
 			var remindMessage = strings.SplitN(m.Content, " ", 3)[2]
 			timer, err := strconv.Atoi(strings.SplitN(m.Content, " ", 3)[1])
 			if err != nil {
@@ -282,6 +301,24 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			} else {
 				s.ChannelMessageSend(m.ChannelID, rps(s, m, rpsChoice))
 			}
+		case botPrefix + "nickchange":
+			st, err := s.UserChannelCreate(m.Author.ID)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("could not create a private channel for %v", m.Author))
+			}
+			nickArgs := strings.SplitN(m.Content, " ", 4)
+			user := sanitizeUser(nickArgs[1])
+			nick := nickArgs[2]
+			g, err := getGuild(s, m.ChannelID)
+			if err != nil {
+				s.ChannelMessageSend(st.ID, fmt.Sprintf("an error getting guild: %v", err))
+			}
+			if err := s.GuildMemberNickname(g.ID, user, nick); err != nil {
+				s.ChannelMessageSend(st.ID, fmt.Sprintf("an error occured while changing the nickname of %v to %v: %v", user, nick, err))
+				return
+			}
+			s.ChannelMessageSend(st.ID, fmt.Sprintf("the nick of %v has been changed", user))
+			return
 		default:
 			fmt.Println("Command not implemented")
 			return
