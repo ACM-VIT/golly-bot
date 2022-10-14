@@ -231,12 +231,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// if the message starts with the prefix, then we know it's a command
 	if strings.HasPrefix(m.Content, botPrefix) {
 		switch strings.ToLower(strings.Split(m.Content, " ")[0]) {
-		case botPrefix + "coinflip":
-			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
 		case botPrefix + "gollyhelp":
 			s.ChannelMessageSend(m.ChannelID, formatHelpMessage())
+		case botPrefix + "ping":
+			s.ChannelMessageSend(m.ChannelID, "pong!")
 		case botPrefix + "greet": // if the command is !greet
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
+		case botPrefix + "coinflip":
+			s.ChannelMessageSend(m.ChannelID, coinFlip(s, m))
 		case botPrefix + "horn":
 			g, err := getGuild(s, m.ChannelID)
 			if err != nil {
@@ -253,6 +255,50 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 					return
 				}
+			}
+		case botPrefix + "weather":
+			w, err := owm.NewCurrent("F", "EN", aptly) // Returns weather in fahrenheit and English
+			if err != nil {
+				log.Fatalln(err)
+			}
+			var location = strings.Title(strings.ToLower(strings.SplitN(m.Content, " ", 2)[1]))
+			w.CurrentByName(location)
+			var result = fmt.Sprintf("Feels Like: %.2f°F\nTemperature: %.2f°F\nMin Temperature: %.2f°F\nMax Temperature: %.2f°F\nHumidity: %d%%\nWind speed: %.2fm/s\n", w.Main.FeelsLike, w.Main.Temp, w.Main.TempMin, w.Main.TempMax, w.Main.Humidity, w.Wind.Speed)
+			for _, item := range w.Weather {
+				result += fmt.Sprintf("%s: %s\n", item.Main, item.Description)
+			}
+			s.ChannelMessageSend(m.ChannelID, result)
+
+		case botPrefix + "serverinfo":
+			// sends embed containing server info
+			s.ChannelMessageSendEmbed(m.ChannelID, serverinfo(s, m))
+		case botPrefix + "remindme": //!remindme command
+			var remindMessage = strings.SplitN(m.Content, " ", 3)[2]
+			timer, err := strconv.Atoi(strings.SplitN(m.Content, " ", 3)[1])
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error! %s\nPlease use the correct syntax: !remindme <seconds> <message>", err))
+			} else {
+				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
+				s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
+			}
+		case botPrefix + "raffle":
+			var msgContent = strings.Split(m.Content, " ")
+
+			// Check if message ID and emoji are present
+			if len(strings.Split(m.Content, " ")) < 3 {
+				fmt.Println("Error finding message id or emoji")
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprint("Something went wrong, try again!\nPlease use the correct syntax : !raffle <message id> <reaction>\n"))
+			}
+			var messageID = msgContent[1]
+			var emoji = msgContent[2]
+
+			s.ChannelMessageSend(m.ChannelID, raffle(s, m.ChannelID, messageID, emoji))
+		case botPrefix + "playrps":
+			var rpsChoice = strings.ToLower(strings.Split(m.Content, " ")[1])
+			if rps(s, m, rpsChoice) == "" {
+				s.ChannelMessageSend(m.ChannelID, "Invalid choice! Use syntax `!playrps <choice>`.\nYour choices are: rock, paper and scissors")
+			} else {
+				s.ChannelMessageSend(m.ChannelID, rps(s, m, rpsChoice))
 			}
 		case botPrefix + "nickchange":
 			st, err := s.UserChannelCreate(m.Author.ID)
@@ -272,52 +318,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			s.ChannelMessageSend(st.ID, fmt.Sprintf("your nick has been changed"))
 			return
-		case botPrefix + "ping":
-			s.ChannelMessageSend(m.ChannelID, "pong!")
-		case botPrefix + "playrps":
-			var rpsChoice = strings.ToLower(strings.Split(m.Content, " ")[1])
-			if rps(s, m, rpsChoice) == "" {
-				s.ChannelMessageSend(m.ChannelID, "Invalid choice! Use syntax `!playrps <choice>`.\nYour choices are: rock, paper and scissors")
-			} else {
-				s.ChannelMessageSend(m.ChannelID, rps(s, m, rpsChoice))
-			}
-		case botPrefix + "raffle":
-			var msgContent = strings.Split(m.Content, " ")
-
-			// Check if message ID and emoji are present
-			if len(strings.Split(m.Content, " ")) < 3 {
-				fmt.Println("Error finding message id or emoji")
-				s.ChannelMessageSend(m.ChannelID, fmt.Sprint("Something went wrong, try again!\nPlease use the correct syntax : !raffle <message id> <reaction>\n"))
-			}
-			var messageID = msgContent[1]
-			var emoji = msgContent[2]
-
-			s.ChannelMessageSend(m.ChannelID, raffle(s, m.ChannelID, messageID, emoji))
-		case botPrefix + "remindme": //!remindme command
-			var remindMessage = strings.SplitN(m.Content, " ", 3)[2]
-			timer, err := strconv.Atoi(strings.SplitN(m.Content, " ", 3)[1])
-			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error! %s\nPlease use the correct syntax: !remindme <seconds> <message>", err))
-			} else {
-				s.ChannelMessageSend(m.ChannelID, "Reminder added!")
-				s.ChannelMessageSend(m.ChannelID, remindMe(s, m, remindMessage, timer))
-			}
-		case botPrefix + "serverinfo":
-			// sends embed containing server info
-			s.ChannelMessageSendEmbed(m.ChannelID, serverinfo(s, m))
-		case botPrefix + "weather":
-			w, err := owm.NewCurrent("F", "EN", aptly) // Returns weather in fahrenheit and English
-			if err != nil {
-				log.Fatalln(err)
-			}
-			var location = strings.Title(strings.ToLower(strings.SplitN(m.Content, " ", 2)[1]))
-			w.CurrentByName(location)
-			var result = fmt.Sprintf("Feels Like: %.2f°F\nTemperature: %.2f°F\nMin Temperature: %.2f°F\nMax Temperature: %.2f°F\nHumidity: %d%%\nWind speed: %.2fm/s\n", w.Main.FeelsLike, w.Main.Temp, w.Main.TempMin, w.Main.TempMax, w.Main.Humidity, w.Wind.Speed)
-			for _, item := range w.Weather {
-				result += fmt.Sprintf("%s: %s\n", item.Main, item.Description)
-			}
-			s.ChannelMessageSend(m.ChannelID, result)
-
 		default:
 			fmt.Println("Command not implemented")
 			return
