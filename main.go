@@ -209,6 +209,20 @@ func getGuild(s *discordgo.Session, channelID string) (*discordgo.Guild, error) 
 	return g, nil
 }
 
+func sanitizeUser(user string) string {
+	// doing this just in case because it works
+	if user == "@me" {
+		return user
+	}
+	if strings.Contains(user, "<") {
+		user = strings.TrimPrefix(user, "@")
+		user = strings.ReplaceAll(user, "<", "")
+		user = strings.ReplaceAll(user, ">", "")
+		return user
+	}
+	return ""
+}
+
 // This handles all commands sent to the bot
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
@@ -293,7 +307,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("could not create a private channel for %v", m.Author))
 			}
 			nickArgs := strings.SplitN(m.Content, " ", 4)
-			user := nickArgs[1]
+			user := sanitizeUser(nickArgs[1])
 			nick := nickArgs[2]
 			g, err := getGuild(s, m.ChannelID)
 			if err != nil {
@@ -303,7 +317,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				s.ChannelMessageSend(st.ID, fmt.Sprintf("an error occured while changing the nickname of %v to %v: %v", user, nick, err))
 				return
 			}
-			s.ChannelMessageSend(st.ID, fmt.Sprintf("your nick has been changed"))
+			s.ChannelMessageSend(st.ID, fmt.Sprintf("the nick of %v has been changed", user))
 			return
 		default:
 			fmt.Println("Command not implemented")
