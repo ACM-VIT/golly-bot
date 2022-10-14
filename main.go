@@ -206,6 +206,22 @@ func nickChange(content string) string {
 	return fmt.Sprintf("your nick is %v", userToNic[user])
 }
 
+func getGuild(s *discordgo.Session, channelID string) (*discordgo.Guild, error) {
+
+	// Find the channel that the message came from.
+	c, err := s.State.Channel(channelID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not find channel")
+	}
+
+	// Find the guild for that channel.
+	g, err := s.State.Guild(c.GuildID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not find guild")
+	}
+	return g, nil
+}
+
 // This handles all commands sent to the bot
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
@@ -222,20 +238,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		case botPrefix + "greet": // if the command is !greet
 			s.ChannelMessageSend(m.ChannelID, randomGreeting(s, m))
 		case botPrefix + "horn":
-			// Find the channel that the message came from.
-			c, err := s.State.Channel(m.ChannelID)
+			g, err := getGuild(s, m.ChannelID)
 			if err != nil {
-				// Could not find channel.
-				return
-			}
+				fmt.Println("Error getting guild:", err)
 
-			// Find the guild for that channel.
-			g, err := s.State.Guild(c.GuildID)
-			if err != nil {
-				// Could not find guild.
-				return
 			}
-
 			// Look for the message sender in that guild's current voice states.
 			for _, vs := range g.VoiceStates {
 				if vs.UserID == m.Author.ID {
@@ -252,7 +259,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("could not create a private channel for %v", m.Author))
 			}
-			s.ChannelMessageSend(st.ID, nickChange(m.Content))
+			nickArgs := strings.SplitN(m.Content, " ", 4)
+			user := nickArgs[1]
+			nick := nickArgs[2]
+			g, err := getGuild(s, m.ChannelID)
+			if err != nil {
+				s.ChannelMessageSend(st.ID, fmt.Sprintf("an error getting guild: %v", err))
+			}
+			if err := s.GuildMemberNickname(g.ID, user, nick); err != nil {
+				s.ChannelMessageSend(st.ID, fmt.Sprintf("an error occured while changing the nickname of %v to %v: %v", user, nick, err))
+				return
+			}
+			s.ChannelMessageSend(st.ID, fmt.Sprintf("your nick has been changed"))
 			return
 		case botPrefix + "ping":
 			s.ChannelMessageSend(m.ChannelID, "pong!")
