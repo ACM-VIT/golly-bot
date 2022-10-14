@@ -52,7 +52,7 @@ var (
 					Content: "<t:" + strconv.FormatInt(time.Now().Unix(), 10) + ">",
 				},
 			})
-			logCommand(s, i.GuildID, i.Member.User.Username, "time")
+			logCommand(s, i.GuildID, "time", i.Member.User)
 		},
 	}
 )
@@ -165,7 +165,7 @@ func main() {
 	dg.Close()
 }
 
-func logCommand(s *discordgo.Session, gID, user, command string) {
+func logCommand(s *discordgo.Session, gID, command string, user *discordgo.User) {
 	// Add slash prefix to the log if given command is a slash command
 	// Else add prefix as BotPrefix
 	var prefix = "Slash"
@@ -286,7 +286,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println("Command not implemented")
 			return
 		}
-		logCommand(s, m.GuildID, m.Author.Username, m.Content)
+		logCommand(s, m.GuildID, m.Content, m.Author)
 
 		// if the message doesn't start with the prefix, then we check if it matches
 		// one of the predefined messages to respond too
