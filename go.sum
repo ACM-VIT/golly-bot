@@ -1,3 +1,5 @@
+github.com/Krognol/go-wolfram v0.0.0-20180610151123-5b91101b92a8 h1:W7c6EO533k0Qxlg81igmCkNf8IL05YnwX/Ja0N+6oOc=
+github.com/Krognol/go-wolfram v0.0.0-20180610151123-5b91101b92a8/go.mod h1:EPNgn+n1Pgo8Us091j1G61MtU6yjVwepTin6xEwlJ6w=
 github.com/briandowns/openweathermap v0.19.0 h1:nkopLMEtZLxbZI1th6dOG6xkajpszofqf53r5K8mT9k=
 github.com/briandowns/openweathermap v0.19.0/go.mod h1:0GLnknqicWxXnGi1IqoOaZIw+kIe5hkt+YM5WY3j8+0=
 github.com/bwmarrin/discordgo v0.26.1 h1:AIrM+g3cl+iYBr4yBxCBp9tD9jR3K7upEjl0d89FRkE=
