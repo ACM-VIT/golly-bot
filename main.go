@@ -3,10 +3,8 @@ package main
 import (
 	// Import the Discordgo package, and other required packages.
 
-	"encoding/binary"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -16,10 +14,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Krognol/go-wolfram"
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
-	"github.com/Krognol/go-wolfram"
 	emj "github.com/kenshaw/emoji"
 )
 
@@ -88,11 +86,7 @@ func main() {
 	computeAppID = os.Getenv("WOLFRAM_API_KEY")
 
 	// Load the sound file.
-	err = loadSound("airhorn.dca")
-	if err != nil {
-		fmt.Println("Error loading sound: ", err)
-		return
-	}
+	loadPresetDCAFiles()
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + token)
@@ -326,9 +320,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			var mathProb = strings.SplitN(m.Content, " ", 2)[1]
 			//Initialize a new client
 			c := &wolfram.Client{AppID: computeAppID}
-			//Get result by making a query using the WolframAlpha API 
+			//Get result by making a query using the WolframAlpha API
 			res, err := c.GetShortAnswerQuery(mathProb, wolfram.Metric, 1000)
-			
+
 			if err != nil {
 				panic(err)
 			}
@@ -359,7 +353,7 @@ func formatHelpMessage() string {
 		"remindme <seconds> <message>": "Create a reminder",
 		"raffle <message id> <emoji>":  "Reply with a random user who reacted to given message with given emoji",
 		"playrps <choice>":             "Play rock, paper and scissors",
-		"compute <query>":		"Ask general questions or mathematical/computational questions to WolframAlpha compute engine",
+		"compute <query>":              "Ask general questions or mathematical/computational questions to WolframAlpha compute engine",
 	}
 
 	helpMessage := "Available commands:\n"
@@ -394,71 +388,6 @@ func coinFlip(s *discordgo.Session, m *discordgo.MessageCreate) string {
 	side := coin[rand.Intn(len(coin))]
 
 	return fmt.Sprintf("Flipped the coin and you get : %s", side)
-}
-
-// playSound plays the current buffer to the provided channel.
-func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
-
-	// Join the provided voice channel.
-	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-	if err != nil {
-		return err
-	}
-	// Sleep for a specified amount of time before playing the sound
-	time.Sleep(250 * time.Millisecond)
-	// Start speaking.
-	vc.Speaking(true)
-	// Send the buffer data.
-	for _, buff := range buffer {
-		vc.OpusSend <- buff
-	}
-	// Stop speaking
-	vc.Speaking(false)
-	// Sleep for a specificed amount of time before ending.
-	time.Sleep(250 * time.Millisecond)
-	// Disconnect from the provided voice channel.
-	vc.Disconnect()
-	return nil
-}
-
-// loadSound attempts to load an encoded sound file from disk.
-func loadSound(filename string) error {
-
-	file, err := os.Open(filename)
-	if err != nil {
-		fmt.Println("Error opening dca file :", err)
-		return err
-	}
-	var opuslen int16
-	for {
-		// Read opus frame length from dca file.
-		err = binary.Read(file, binary.LittleEndian, &opuslen)
-		// If this is the end of the file, just return.
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			err := file.Close()
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-
-		if err != nil {
-			fmt.Println("Error reading from dca file :", err)
-			return err
-		}
-
-		// Read encoded pcm from dca file.
-		InBuf := make([]byte, opuslen)
-		err = binary.Read(file, binary.LittleEndian, &InBuf)
-
-		// Should not be any end of file errors
-		if err != nil {
-			fmt.Println("Error reading from dca file :", err)
-			return err
-		}
-		// Append encoded pcm data to the buffer.
-		buffer = append(buffer, InBuf)
-	}
 }
 
 // !remindme command function
