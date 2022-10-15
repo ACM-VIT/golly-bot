@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 )
@@ -21,44 +20,63 @@ func createDB() bool {
 	return true
 }
 
+func writeToDB(key, value string) bool  {
+	if isExistDB() {
 
-type DATA struct{
-	Key string 
-	Value string 
-}
-var db []DATA
+		jsonFile, err := os.Open("db.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
 
-func writeToDB(key, value string) bool  {	
-    result, error := json.Marshal(DATA{Key:key, Value: value})
-    if error != nil {
-        fmt.Println(error)
-    }
+		byteValue, _ := ioutil.ReadAll(jsonFile)
 
-    f, erro := os.OpenFile("db.json", os.O_APPEND|os.O_WRONLY, 0666)
-    if erro != nil {
-        fmt.Println(erro)
-    }
+		// Declared an empty map interface
+		var result map[string]interface{}
+		result = make(map[string]interface{})
+		
+		// Unmarshal or Decode the JSON to the interface.
+		json.Unmarshal(byteValue, &result)
 
-    n, err := io.WriteString(f, string(result))
-    if err != nil {
-        fmt.Println(n, err)
-    }
-    return true
-}
+		result[key] = value
 
+		// Marshal or Encode the interface data
+		jsonResult, _ := json.Marshal(result)
+		// Write the JSON data to the file
+		ioutil.WriteFile("db.json", jsonResult, 0644)
 
-func readFromDB(key string) string {
-	file, err := ioutil.ReadFile("db.json")
-	var obj DATA
-	err = json.Unmarshal(file, &obj)
-	if err != nil {
-		fmt.Println(err)
+		return true
+	} else {
+		return false
 	}
-	if obj.Key == key {
-		return "Key found: " + obj.Value
-	}
+}
 
-	return "Key not Found!";
+
+func readFromDB(key string) (string, bool) {
+	if isExistDB() {
+		jsonFile, err := os.Open("db.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+
+		// Declared an empty map interface
+		var result map[string]interface{}
+
+		// Unmarshal or Decode the JSON to the interface.
+		json.Unmarshal(byteValue, &result)
+
+		// Reading each value by its key
+		if result[key] != nil {
+			return result[key].(string), true
+		} else {
+			return "", false
+		}
+	} else {
+		return "", false
+	}
 }
 
 
