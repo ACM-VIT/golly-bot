@@ -195,13 +195,13 @@ func getGuild(s *discordgo.Session, channelID string) (*discordgo.Guild, error) 
 	// Find the channel that the message came from.
 	c, err := s.State.Channel(channelID)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find channel")
+		return nil, fmt.Errorf("could not find channel")
 	}
 
 	// Find the guild for that channel.
 	g, err := s.State.Guild(c.GuildID)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find guild")
+		return nil, fmt.Errorf("could not find guild")
 	}
 	return g, nil
 }
@@ -285,7 +285,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			// Check if message ID and emoji are present
 			if len(strings.Split(m.Content, " ")) < 3 {
 				fmt.Println("Error finding message id or emoji")
-				s.ChannelMessageSend(m.ChannelID, fmt.Sprint("Something went wrong, try again!\nPlease use the correct syntax : !raffle <message id> <reaction>\n"))
+				s.ChannelMessageSend(m.ChannelID, "Something went wrong, try again!\nPlease use the correct syntax : !raffle <message id> <reaction>\n")
 			}
 			var messageID = msgContent[1]
 			var emoji = msgContent[2]
@@ -466,7 +466,7 @@ func raffle(s *discordgo.Session, channelID, messageID, emoji string) string {
 	reactedUsers, err := s.MessageReactions(channelID, messageID, reaction.ID, 100, "", "")
 	if err != nil {
 		fmt.Println(err)
-		return fmt.Sprint("Could not find users reacted to this message")
+		return "Could not find users reacted to this message"
 	}
 
 	// Returns, if no user reacted to the message
@@ -617,8 +617,7 @@ func guildMemberJoin(s *discordgo.Session, memberAdd *discordgo.GuildMemberAdd) 
 			return
 		}
 	}
-	fmt.Sprint("There is no text channel to send the welcome message.")
-	return
+
 }
 
 // guildMemberLeave sends goodbye message when a member leaves the server.
@@ -644,6 +643,4 @@ func guildMemberLeave(s *discordgo.Session, memberRemove *discordgo.GuildMemberR
 			return
 		}
 	}
-	fmt.Sprint("There is no text channel to send the goodbye message.")
-	return
 }
