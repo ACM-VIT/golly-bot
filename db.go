@@ -7,21 +7,21 @@ import (
 	"os"
 )
 
-func isExistDB() bool{
+func IsExistDB() bool {
 	if _, err := os.Stat("db.json"); err == nil {
-		return true;
+		return true
 	} else {
 		return false
 	}
 }
 
-func createDB() bool {
-	os.Create("db.json");
+func CreateDB() bool {
+	os.Create("db.json")
 	return true
 }
 
-func writeToDB(key, value string) bool  {
-	if isExistDB() {
+func WriteToDB(key, value string) bool {
+	if IsExistDB() {
 
 		jsonFile, err := os.Open("db.json")
 		if err != nil {
@@ -32,9 +32,8 @@ func writeToDB(key, value string) bool  {
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 
 		// Declared an empty map interface
-		var result map[string]interface{}
-		result = make(map[string]interface{})
-		
+		result := make(map[string]interface{})
+
 		// Unmarshal or Decode the JSON to the interface.
 		json.Unmarshal(byteValue, &result)
 
@@ -51,9 +50,8 @@ func writeToDB(key, value string) bool  {
 	}
 }
 
-
-func readFromDB(key string) (string, bool) {
-	if isExistDB() {
+func ReadFromDB(key string) (string, bool) {
+	if IsExistDB() {
 		jsonFile, err := os.Open("db.json")
 		if err != nil {
 			fmt.Println(err)
@@ -79,34 +77,33 @@ func readFromDB(key string) (string, bool) {
 	}
 }
 
+// func main() {
+// 	fmt.Println("Enter the number:\n1. Check the DataBase\n2. Make a new DataBase\n3. Add data to the database\n4. Check wheather the data is exists or not in the DataBase")
+// 	var mainCase int
+// 	fmt.Scan(&mainCase);
+// 	switch mainCase {
+// 	case 1:
+// 		fmt.Println(isExistDB())
+// 		break
+// 	case 2:
+// 		fmt.Println(createDB())
+// 		break
+// 	case 3:
+// 		fmt.Println("Enter Key and Value")
+// 		var key string
+// 		var value string
+// 		fmt.Scanln(&key)
+// 		fmt.Scanln(&value)
+// 		fmt.Println(writeToDB(key, value))
+// 		break
+// 	case 4:
+// 		var key string
+// 		fmt.Scanln(&key)
+// 		fmt.Println(readFromDB(key))
+// 		break
+// 	default:
+// 		fmt.Errorf("No Number Pressed")
 
-func main() {
-	fmt.Println("Enter the number:\n1. Check the DataBase\n2. Make a new DataBase\n3. Add data to the database\n4. Check wheather the data is exists or not in the DataBase")
-	var mainCase int
-	fmt.Scan(&mainCase);
-	switch mainCase {
-	case 1:
-		fmt.Println(isExistDB())
-		break
-	case 2:
-		fmt.Println(createDB())
-		break
-	case 3:
-		fmt.Println("Enter Key and Value")
-		var key string
-		var value string
-		fmt.Scanln(&key)
-		fmt.Scanln(&value)
-		fmt.Println(writeToDB(key, value))
-		break
-	case 4:
-		var key string
-		fmt.Scanln(&key)
-		fmt.Println(readFromDB(key))
-		break
-	default:
-		fmt.Errorf("No Number Pressed")
-		
-	}
-		
-}
+// 	}
+
+// }
