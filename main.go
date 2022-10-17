@@ -9,11 +9,11 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-	"regexp"
 
 	"github.com/Krognol/go-wolfram"
 	owm "github.com/briandowns/openweathermap"
@@ -30,12 +30,13 @@ var (
 
 var (
 	//declaring secrets
-	token        = ""
-	aptly        = ""
-	logChannelID = ""
-	botPrefix    = ""
-	computeAppID = ""
-	buffer       = make([][]byte, 0)
+	token         = ""
+	aptly         = ""
+	logChannelID  = ""
+	botPrefix     = ""
+	computeAppID  = ""
+	youtubeAPIKey = ""
+	buffer        = make([][]byte, 0)
 
 	commands = []*discordgo.ApplicationCommand{
 		{
@@ -85,6 +86,7 @@ func main() {
 	logChannelID = os.Getenv("LOG_CHANNEL_ID")
 	botPrefix = os.Getenv("BOT_PREFIX")
 	computeAppID = os.Getenv("WOLFRAM_API_KEY")
+	youtubeAPIKey = os.Getenv("YOUTUBE_API_KEY")
 
 	// Load the sound file.
 	loadPresetDCAFiles()
@@ -314,6 +316,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				panic(err)
 			}
 			s.ChannelMessageSend(m.ChannelID, res)
+		case botPrefix + "searchyt":
+			var query = strings.Join(strings.Split(m.Content, " ")[1:], " ")
+
+			title, link := searchYT(query, youtubeAPIKey)
+
+			s.ChannelMessageSend(m.ChannelID, title+"\n"+link)
 		default:
 			fmt.Println("Command not implemented")
 			return
@@ -341,6 +349,7 @@ func formatHelpMessage() string {
 		"raffle <message id> <emoji>":  "Reply with a random user who reacted to given message with given emoji",
 		"playrps <choice>":             "Play rock, paper and scissors",
 		"compute <query>":              "Ask general questions or mathematical/computational questions to WolframAlpha compute engine",
+		"searchyt <query>":             "Returns first search result from Youtube for searched query.",
 	}
 
 	helpMessage := "Available commands:\n"
