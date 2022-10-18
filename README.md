@@ -69,6 +69,8 @@ A general purpose Discord bot, written in GO!
   * To specify command line arguments, use
     <pre><code>docker run -it &lt;your image name&gt; &lt;arguments&gt;</pre></code> 
     For example:<pre><code>docker run -it &lt;your image name&gt; -rmcmd=false</pre></code>
+  * To run a different go file at entry point use
+    <pre><code>docker run -it -e RUNFILE=voice.go &lt;your image name&gt; &lt;arguments&gt;</code></pre>
   
 <!-- ---
 ## Overview
