@@ -9,11 +9,11 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-	"regexp"
 
 	"github.com/Krognol/go-wolfram"
 	owm "github.com/briandowns/openweathermap"
@@ -42,6 +42,24 @@ var (
 			Name:        "time",
 			Description: "return current time.",
 		},
+		{
+			Name:        "whisper",
+			Description: "send anonymous direct message to a user.",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "User",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "message",
+					Description: "Message",
+					Required:    true,
+				},
+			},
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -54,6 +72,36 @@ var (
 				},
 			})
 			logCommand(s, i.GuildID, "time", i.Member.User)
+		},
+		"whisper": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			var userID string
+			var message = "You have a new anonymous whisper: "
+			options := i.ApplicationCommandData().Options
+
+			// Get the options entered with the slash command
+			optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
+			for _, opt := range options {
+				optionMap[opt.Name] = opt
+			}
+
+			// Get the user from the option map.
+			if option, ok := optionMap["user"]; ok {
+				userID = option.UserValue(nil).ID
+			}
+
+			// Get the message from the option map.
+			if option, ok := optionMap["message"]; ok {
+				message = message + option.StringValue()
+			}
+			sendDirectMessage(s, i.ChannelID, userID, message)
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Flags:   discordgo.MessageFlagsEphemeral,
+					Content: fmt.Sprintf("The whisper was delivered!"),
+				},
+			})
+			logCommand(s, i.GuildID, "whisper", i.Member.User)
 		},
 	}
 )
@@ -579,4 +627,30 @@ func rps(s *discordgo.Session, m *discordgo.MessageCreate, rpsChoice string) str
 		}
 	}
 	return ""
+}
+
+func sendDirectMessage(s *discordgo.Session, channelID, userID, message string) {
+	// Create a channel to send direct message.
+	// If a DM channel already exists, it will be reused.
+	channel, err := s.UserChannelCreate(userID)
+	if err != nil {
+		// Failed to create the channel.
+		fmt.Println("error creating channel:", err)
+		s.ChannelMessageSend(
+			channelID,
+			"something went wrong while sending the direct message",
+		)
+		return
+	}
+
+	// Send the message through the created channel.
+	_, err = s.ChannelMessageSend(channel.ID, message)
+	if err != nil {
+		// Failed to send the message.
+		fmt.Println("error sending DM message:", err)
+		s.ChannelMessageSend(
+			channelID,
+			"failed to send a direct message",
+		)
+	}
 }
